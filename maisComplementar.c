@@ -59,6 +59,8 @@ void buscaLocal(Item* itens, int nItens, int *restante, int *nCaixas, int tamCai
 int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int minCaixas)
 {
 	
+//Bruno:
+
 	//quantidade de itens no vetor de maiores e no vetor de menores
 	int contMaior, contMenor;
 	//vamos colocar metade dos elementos no primeiro e metade no segundo
@@ -107,7 +109,9 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	//fprintf(f,"\n%d\t", res);
 	fprintf(f,"    \n");
 
-	//
+	//Bruno fim
+
+	//Bruce:
 
 	//divindo itens em dois vetores, um com a primeira metade (maiores valores dentre todos os itens) e outro com a segunda metade (menores valores)
 	//TODO se quiser mudar o criterio de divisão, é aqui que isso acontece.
@@ -159,6 +163,8 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 		ret = buscaLocal(itens, n, &qtdCaixas, restante, tamCaixa);
 		if(ret==1) break;
 	}
+
+	//Bruce Fim
 			
 
 	//o que é uma solução aceitavel?
@@ -170,19 +176,24 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 		//swap entre elementos dentro de caixas
 		//vou escolher um elemento aleatoriamente e vou trocar ele de lugar com todos os vizinhos e tentar colocar em todas as caixas.
 	// como vou representar isso?
-		//por uma matriz nX4, com n sendo um numero de vizinhos
+		//NÃO - por uma matriz nX4, com n sendo um numero de vizinhos
 		//e os 4 valores seriam a posição dos outros dos dois itens na caixa
 
-		//com dois valores e uma matriz mx2 onde m é o numero de vizinhos e 2 as duas colunas são a posição de um item na matriz 
+		//NÃO - com dois valores e uma matriz mx2 onde m é o numero de vizinhos e 2 as duas colunas são a posição de um item na matriz 
+
+		// por um valor indicando a posiçao do item no vetor de items
 	//como vou escolher um bom vizinho?
+
 		//menor quantidade de caixas. E se for a mesma quantidade?
 
-		//vou escolher um vizinho que tenha feito a caixa B ficar o mais proximo possivel de alcançar a capacidade maxima.
+		//vou escolher um vizinho que tenha feito a caixa B ficar o mais proximo possivel de alcançar a capacidade maxima. E que tenha ficado mais proximo do que o a propria caixa que selecionei.
 	//Como sei que encontrei uma boa solução?
 		//primeira pergunta
 
 	//Encontramos? uma solução! basta colocar num arquivo
 	
+	//Bruno:
+
 	qtdCaixas++;
 	fprintf(f, "%d\n", qtdCaixas);
 	for(i=0;i<qtdCaixas;i++){
@@ -202,9 +213,13 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	free(posVazia);
 
 	return qtdCaixas;
+	//Bruno fim
 }
 
 int main (){
+
+	//Bruno:
+
 	int caixaSize;
 	int nCaixas, i;
 	int somaTudo = 0;

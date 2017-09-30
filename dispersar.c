@@ -1,59 +1,72 @@
 #include <stdio.h>
 #include <stdlib.h>
- 
-int colocaCaixas(FILE *f, int itens[], int n, int tamCaixa)
+#include <time.h.h>
+
+typedef struct item{
+	int peso;
+	int posOrig;
+	int caixa;
+} Item;
+
+
+
+int colocaCaixas(FILE *f, int itensVet[], int nItens, int tamCaixa, int maxLoop, int minCaixas)
 {
+
 	//espaço restante numa caixa
 	int *restante;
-	//matriz que guarda os itens em cada caixa
-	int **caixas;
-	//guarda qual a próxima posição vazia em cada linha da matriz caixas
-	int *posVazia;
+	//vetor de ponteiro para o tipo Item que guarda os itens, note que cada item sabe em que caixa está
+	Item **itens;
 	int qtdCaixas = 0;
 	int i,e;
+	int tempo = time(NULL);
+	srand(tempo);
 
 	restante = (int*) malloc(n*sizeof(int));
-	caixas = (int**) malloc(n*sizeof(int*));
-	posVazia = (int*) malloc(n*sizeof(int));
+	itens = (Item**) malloc(n*sizeof(Item*));
 
-	if(!restante || !caixas || !posVazia ){
-		printf("erro\n");
-		exit(EXIT_FAILURE);
-	}
+	//Inicializando
 
-	for(i=0;i<n;i++){
-		caixas[i] = (int*) malloc(n*sizeof(int));
-		if(!caixas[i] ){
+	for(i=0;i<nItens;i++){
+		itens[i] = (Item*) malloc(sizeof(Item));
+		if(!itens[i] ){
 			printf("erro\n");
 			exit(EXIT_FAILURE);
 		}
 		restante[i] = tamCaixa;
-		posVazia[i] = 0;
 	}
+
+	//Transformando os itens em itensVet em instancias da estrutura Item
+
+	for (i=0;i<nItens;i++){
+		itens[i]->peso = itensVet[i];
+		itens[i]->posOrig = i;
+		itens[i]->caixa = -1;
+	}
+	
+	//Fim da inicializando
 
 	//fprintf(f,"\n%d\t", res);
-	fprintf(f,"          \n");
+	fprintf(f,"    \n");
 
-	//sort(itens);
-
-	//Para cada item
-	for (i=0; i<n; i++)
-	{
-		
-		//vamos olhar para cada caixa
-		for(e=0; e<n; e++){
-			//se cabe na caixa
-			if(itens[i]<=restante[e]){
-				caixas[e][posVazia[e]] = itens[i]; //=i
-				restante[e]-= itens[i];
-				posVazia[e] += 1;
-				if(e>qtdCaixas) qtdCaixas = e;
-				//colocamos na caixa e olhamos para o proximo item
+	//dispersar
+	for(i=0;i<nItens;i++){
+		for(e=0;e<qtdCaixas;e++){
+			if(itens[i]->peso <= restante[e]){
+				itens[i]->caixa = qtdCaixas;
+				restante[qtdCaixas] -= itens[i]->peso;
 				break;
 			}
-			// se não cabe continuamos o loop e olhamos para a proxima caixa
+		}
+		if(itens[i].caixa->==-1){
+			qtdCaixas++;
+			itens[i]->caixa = qtdCaixas;
+			restante[qtdCaixas] -= itens[i]->peso;
 		}
 	}
+
+	//Encontramos? uma solução! basta colocar num arquivo
+
 	qtdCaixas++;
 	fprintf(f, "%d\n", qtdCaixas);
 	for(i=0;i<qtdCaixas;i++){
@@ -62,11 +75,18 @@ int colocaCaixas(FILE *f, int itens[], int n, int tamCaixa)
 		}
 		fprintf(f, "\n");
 	}
+	
+	printf("%d", tempo);
+
+	free(restante);
+	free(caixas);
+	free(posVazia);
 
 	return qtdCaixas;
 }
 
 int main (){
+
 	int caixaSize;
 	int nCaixas, i;
 	int somaTudo = 0;
@@ -77,7 +97,6 @@ int main (){
 	if(!f){
 		printf("erro!");
 		exit(EXIT_FAILURE);
-
 	}
 	fscanf(f, "%d\n", &nCaixas);
 	fscanf(f, "%d\n", &caixaSize);
@@ -94,10 +113,11 @@ int main (){
 	for(i=0;i<nCaixas;i++){
 		somaTudo+=itens[i];
 	}
-	printf("soma:\n%d\n", somaTudo);
-	printf("tamanho:\n%d\n", caixaSize);
+printf("soma:\n%d\n", somaTudo);
+printf("tamanho:\n%d\n", caixaSize);
 	printf("caixas necessarias:\n%d\n", somaTudo/caixaSize);
 
 	free(itens);
 	return 0;
 }
+

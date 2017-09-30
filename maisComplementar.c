@@ -64,7 +64,7 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	//quantidade de itens no vetor de maiores e no vetor de menores
 	int contMaior, contMenor;
 	//vamos colocar metade dos elementos no primeiro e metade no segundo
-	int *maiores, *menores;
+	Item **maiores, **menores;
 	//espaço restante numa caixa
 	int *restante;
 	//vetor de ponteiro para o tipo Item que guarda os itens, note que cada item sabe em que caixa está
@@ -77,8 +77,8 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	contMaior = n/2;
 	contMenor = n-contMenor;
 
-	maiores = (int*) malloc(contMaior*sizeof(int));
-	menores = (int*) malloc(contMenor*sizeof(int));
+	maiores = itens;
+	menores = itens+contMaior;
 
 	restante = (int*) malloc(n*sizeof(int));
 	itens = (Item**) malloc(n*sizeof(Item*));
@@ -117,38 +117,30 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	//TODO se quiser mudar o criterio de divisão, é aqui que isso acontece.
 
 
-	for (i=0; i<n; i++)
-	{
-		if (i<contMaior)
-			maiores[i] = itens[i];
-		else
-			menores[i-contMaior] = itens[i];
-	}
-
-
 	//distribuindo entre caixas
 
+	//complementar
 	for(i=0;i<contMaior;i++){
-		caixas[qtdCaixas][posVazia] = maiores[i];
-		restante[qtdCaixas] = tamCaixa - maiores[i];
+		maiores[i]->caixa = qtdCaixas;
+		restante[qtdCaixas] = tamCaixa - maiores[i]->peso;
        		for(e=0;e<contMenor;e++){
-			if(menores[e] != 0 && menores[e] <= restante[qtdCaixas]){
-				caixas[qtdCaixas][posVazia[qtdCaixas]] = menores[e];
-				restante[qtdCaixas] -= menores[e];
-				menores[e] = 0;
-				posVazia[qtdCaixas] += 1;
+			if(menores[e]->caixa == -1  && menores[e]->peso <= restante[qtdCaixas]){
+				menores[e]->caixa = [qtdCaixas];
+				restante[qtdCaixas] -= menores[e]->peso;
 			}
 		}
 		qtdCaixas++;
 	}
 
+	//guloso entre os que sobraram
 	for(i=0;i<contMenor;i++){
-		if(menores[i] != 0 && menores[i] > restante){
-			res++;
-			restante = c - menores[i];
-		}
-		else if(menores[i] != 0 && menores[i] <= restante){
-			restante -= menores[i];
+		if(menores[i]->caixa == -1){
+			for(e=qtdCaixas;e<n;e++){
+				if(menores[i]->peso <= restante[e]){
+					menores[i]->caixa = e;
+					restante[e] -= menores[i]->peso;
+				}
+			}
 		}
 	}
 

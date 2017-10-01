@@ -8,10 +8,10 @@
 
 //acha um vizinho melhor e muda o estado para ele
 void buscaLocal(Item** itens, int nItens, int *restante, int nCaixas, int tamCaixa) {
-	Item *itemA;
+	Item *itemA, *itemB;
 	int posB;
 	int restoAtual, novoResto;
-	int temp;
+	int temp, bug;
 	int i;
 	itemA = itens[rand() % nItens];
 	posB = -1;
@@ -20,8 +20,8 @@ void buscaLocal(Item** itens, int nItens, int *restante, int nCaixas, int tamCai
 	//Vamos analisar os casos em que retiramos de uma caixa e colocamos em outra separadamente, pode ser que um item caiba em outra caixa que está mais cheia do que a que ele está, nesse caso queremos colocar esse elemento em outra caixa (e esvaziar esta).
 	for (i = 0;i<nCaixas;i++) {
 		//Se o item cabe na caixa
-		// e se ela esta mais cheia do que a atual
-		if (itemA->peso < restante[i] && restante[i]<restante[itemA->caixa] + itemA->peso) {
+		// e se ela esta mais cheia do que a atual e se ela não é a caixa na qual o item ja esta
+		if (itemA->peso < restante[i] && restante[i]<(restante[itemA->caixa] + itemA->peso) && i!= itemA->caixa) {
 			//coloco esse item naquela caixa e retorno
 
 			/*
@@ -42,8 +42,7 @@ void buscaLocal(Item** itens, int nItens, int *restante, int nCaixas, int tamCai
 	for (i = 0;i<nItens;i++) {
 		//se a caixa para a qual ele vai, vai ficar mais ocupada do que a caixa na qual ele está
 		novoResto = restante[itens[i]->caixa] - (itemA->peso - itens[i]->peso);
-
-		if (0 <= novoResto && novoResto < restante[i] && novoResto < restante[itemA->caixa]) {
+		if (0 <= novoResto && novoResto < restante[itens[i]->caixa] && novoResto < restante[itemA->caixa]) {
 			//printf("novoResto: %d, pesoA:%d, pesoB:%d, restanteB:%d\n", novoResto, itemA->peso, itens[i]->peso, restante[itens[i]->caixa]);
 			//encontramos um vizinho valido e potencialmente melhor que o estado atual, basta compara-lo com o anterior
 			if (novoResto<restoAtual) {
@@ -58,20 +57,25 @@ void buscaLocal(Item** itens, int nItens, int *restante, int nCaixas, int tamCai
 		//printf("Nenhum vizinho foi encontrado :(\n");
 		return;
 	}
-	//printf("trocando da caixa %d, peso:%d com item da caixa %d, peso:%d\n", itemA->caixa, itemA->peso, itens[posB]->caixa, itens[posB]->peso);
+	//printf("trocando da caixa %d, peso:%d com item da caixa %d, peso:%d\n", itemA->caixa, itemA->peso, itens[posB]->caixa, itens[posB]->peso); 
 
+	//printf("troca de item\n");
+	//printf("restoA: %d\t restoB: %d\t\n", restante[itemA->caixa], restante[itens[posB]->caixa]);
 	//atualiza restantes parte 1
 	restante[itemA->caixa] += itemA->peso;
 	restante[itens[posB]->caixa] += itens[posB]->peso;
 
 	// troca de caixa
-	temp = itens[posB]->caixa;
-	itens[posB]->caixa = itemA->caixa;
+	itemB = itens[posB];
+
+	temp = itemB->caixa;
+	itemB->caixa = itemA->caixa;
 	itemA->caixa = temp;
 	
 	// atualiza restante parte 2
 	restante[itemA->caixa] -= itemA->peso;
-	restante[itens[posB]->caixa] = itens[posB]->peso;
+	restante[itemB->caixa] -= itemB->peso;
+	//printf("restoA: %d\t restoB: %d\t\n", restante[itemA->caixa], restante[itemB->caixa]);
 
 	//printf("agora o restante na caixa %d e %d\n", itemA->caixa, restante[itemA->caixa]);
 	//printf("agora o restante na caixa %d e %d\n", itens[posB]->caixa, restante[itens[posB]->caixa]);
@@ -162,7 +166,7 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa, int minCaixas,
 
 	vazias = 0;
 	for (i = 0;i<qtdCaixas;i++) {
-		if (restante[i] == tamCaixa)vazias++;
+		if (restante[i] == tamCaixa) vazias++;
 	}
 	fprintf(f, "%d\n", qtdCaixas - vazias);
 	for (i = 0, e = 0;i<nItens;i++) {

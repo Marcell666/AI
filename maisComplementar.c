@@ -1,46 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h.h>
+#include <time.h>
+#include "sort.h"
 
-typedef struct item{
-	int peso;
-	int posOrig;
-	int caixa;
-} Item;
 
 //acha um vizinho melhor e muda o estado para ele
-void buscaLocal(Item* itens, int nItens, int *restante, int *nCaixas, int tamCaixa){
-	posA = rand()%nItens;
-	restoAtual = tamCaixa;
-	posB = -1;
+int buscaLocal(Item** itens, int nItens, int *restante, int *nCaixas, int tamCaixa){
+	Item *itemA;
+	int posB;
+	int restoAtual, novoResto;
 	int temp;
+	int i;
+	itemA = itens[rand()%nItens];
+	posB = -1;
+	restoAtual = tamCaixa;
 
 //Vamos analisar os casos em que retiramos de uma caixa e colocamos em outra separadamente, pode ser que um item caiba em outra caixa que está mais cheia do que a que ele está, nesse caso queremos colocar esse elemento em outra caixa (e esvaziar esta).
 	for(i=0;i<*nCaixas;i++){
 		//Se o item cabe na caixa
-		if(0 < restante[i] && itens[posA]->peso < restante[i]<= restante[e]){
-			// e se ela esta mais cheia do que a atual
-			if(restante[i]>restante[posA]+itens[posA]->peso)
-				//coloco esse item naquela caixa e retorno
-				restante[itens[posA]->caixa] += itens[posA]->peso;
-				itens[posA]->caixa = i;
-				restante[itens[posA]->caixa] -= itens[posA]->peso;
-				printf("troca de caixa\n");
-				return 2;
-			}
+		// e se ela esta mais cheia do que a atual
+		if(itemA->peso < restante[i] && restante[i]<restante[itemA->caixa]+itemA->peso){
+			//coloco esse item naquela caixa e retorno
+			printf("troca de caixa\n");
+			printf("restoA: %d\t restoB: %d\t\n", restante[itemA->caixa], restante[i]);
+			printf("pesoA: %d\n", itemA->peso);
+			printf("caixaA: %d\t caixaB: %d\n", itemA->caixa, i);
+			restante[itemA->caixa] += itemA->peso;
+			itemA->caixa = i;
+			restante[itemA->caixa] -= itemA->peso;
+			return 2;
 		}
 	}
 
 	//para cada item
 	for(i=0;i<nItens;i++){
 		//se a caixa para a qual ele vai, vai ficar mais ocupada do que a caixa na qual ele está
-		novoResto = restante[itens[i]->caixa] - (itens[posA]->peso - itens[i]->peso);
-		if(0<= novoResto && novoResto < restante[i] && novoResto < restante[itens[posA]){
-		//encontramos um vizinho valido e potencialmente melhor que o estado atual, basta compara-lo com o anterior
-		if(novoResto<restoAtual){
-			//encontramos um vizinho melhor que o anterior
-			restoAtual = novoResto;
-			posB = i;
+		novoResto = restante[itens[i]->caixa] - (itemA->peso - itens[i]->peso);
+		
+		if(0<= novoResto && novoResto < restante[i] && novoResto < restante[itemA->caixa]){
+printf("novoResto: %d, pesoA:%d, pesoB:%d, restanteB:%d\n", novoResto, itemA->peso, itens[i]->peso, restante[itens[i]->caixa]);
+			//encontramos um vizinho valido e potencialmente melhor que o estado atual, basta compara-lo com o anterior
+			if(novoResto<restoAtual){
+				//encontramos um vizinho melhor que o anterior
+				restoAtual = novoResto;
+				posB = i;
+			}
 		}		
 	}
 	//verificamos se um vizinho foi encontrado, fazemos a troca e retornamos	
@@ -48,74 +52,52 @@ void buscaLocal(Item* itens, int nItens, int *restante, int *nCaixas, int tamCai
 		printf("Nenhum vizinho foi encontrado :(\n");
 		return 1;
 	}
-	printf("trocando %d,peso:%d com %d,peso%d\n", posA, itens[posA]->peso, posB, itens[posB]->peso);
+	printf("trocando da caixa %d, peso:%d com item da caixa %d, peso:%d\n", itemA->caixa, itemA->peso, itens[posB]->caixa, itens[posB]->peso);
 	temp = itens[posB]->caixa;
-	itens[posB]->caixa = itens[posA]->caixa;
-	itens[posA]->caixa = temp; 	
+	itens[posB]->caixa = itemA->caixa;
+	itemA->caixa = temp;
+	printf("agora o restante na caixa %d e %d", itemA->caixa, restante[itemA->caixa]);
+	printf("agora o restante na caixa %d e %d", itens[posB]->caixa, restante[itens[posB]->caixa]);
 	return 0;
 }
 
 
-int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int minCaixas)
+int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa, int minCaixas, int maxLoop)
 {
-	
-//Bruno:
-
 	//quantidade de itens no vetor de maiores e no vetor de menores
 	int contMaior, contMenor;
 	//vamos colocar metade dos elementos no primeiro e metade no segundo
 	Item **maiores, **menores;
 	//espaço restante numa caixa
 	int *restante;
-	//vetor de ponteiro para o tipo Item que guarda os itens, note que cada item sabe em que caixa está
-	Item **itens;
 	int qtdCaixas = 0;
 	int i,e;
 	int tempo = time(NULL);
+	int ret;
 	srand(tempo);
 
-	contMaior = n/2;
-	contMenor = n-contMenor;
+	printf("SEED USADO: %d\n", tempo);
 
-	maiores = itens;
-	menores = itens+contMaior;
-
-	restante = (int*) malloc(n*sizeof(int));
-	itens = (Item**) malloc(n*sizeof(Item*));
+	restante = (int*) malloc(nItens*sizeof(int));
 
 	//Inicializando
 
-	for(i=0;i<n;i++){
-		itens[i] = (Item*) malloc(sizeof(Item));
-		if(!itens[i] ){
-			printf("erro\n");
-			exit(EXIT_FAILURE);
-		}
+	for(i=0;i<nItens;i++){
 		restante[i] = tamCaixa;
 	}
 
-	//Transformando os itens em itensVet em instancias da estrutura Item
-
-	for (i=0;i<n;i++){
-		itens[i]->peso = itensVet[i];
-		itens[i]->posOrig = i;
-		itens[i]->caixa = -1;
-	}
-
-	// TODO sort() AQUI É NECESSARIO!!
+	sort(itens, nItens, comparaPesoDecrescente);
 	
 	//Fim da inicializando
-
-	//fprintf(f,"\n%d\t", res);
-	fprintf(f,"    \n");
-
-	//Bruno fim
-
-	//Bruce:
 
 	//divindo itens em dois vetores, um com a primeira metade (maiores valores dentre todos os itens) e outro com a segunda metade (menores valores)
 	//TODO se quiser mudar o criterio de divisão, é aqui que isso acontece.
 
+	contMaior = nItens/2;
+	contMenor = nItens-contMaior;
+
+	maiores = itens;
+	menores = itens+contMaior;
 
 	//distribuindo entre caixas
 
@@ -125,7 +107,7 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 		restante[qtdCaixas] = tamCaixa - maiores[i]->peso;
        		for(e=0;e<contMenor;e++){
 			if(menores[e]->caixa == -1  && menores[e]->peso <= restante[qtdCaixas]){
-				menores[e]->caixa = [qtdCaixas];
+				menores[e]->caixa = qtdCaixas;
 				restante[qtdCaixas] -= menores[e]->peso;
 			}
 		}
@@ -135,7 +117,7 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	//guloso entre os que sobraram
 	for(i=0;i<contMenor;i++){
 		if(menores[i]->caixa == -1){
-			for(e=qtdCaixas;e<n;e++){
+			for(e=qtdCaixas;e<nItens;e++){
 				if(menores[i]->peso <= restante[e]){
 					menores[i]->caixa = e;
 					restante[e] -= menores[i]->peso;
@@ -147,102 +129,92 @@ int colocaCaixas(FILE *f, int itensVet[], int n, int tamCaixa, int maxLoop, int 
 	//Agora temos uma solução, vamos fazer uma busca local
 
 	for(i=0;i<maxLoop;i++){
+		
 		if(qtdCaixas == minCaixas){
 			printf("encontrado numero solicitado de caixas");
 			break;
 		}
 
-		ret = buscaLocal(itens, n, &qtdCaixas, restante, tamCaixa);
-		if(ret==1) break;
+		ret = buscaLocal(itens, nItens, restante,&qtdCaixas , tamCaixa);
 	}
-
-	//Bruce Fim
-			
-
-	//o que é uma solução aceitavel?
-		//parametro para quantas caixas quero
-		//parametro para limite de quantas vezes vai rodar
-	//posso so rodar X vezes?
-		//resposta acima
-	//como vou gerar os vizinhos?
-		//swap entre elementos dentro de caixas
-		//vou escolher um elemento aleatoriamente e vou trocar ele de lugar com todos os vizinhos e tentar colocar em todas as caixas.
-	// como vou representar isso?
-		//NÃO - por uma matriz nX4, com n sendo um numero de vizinhos
-		//e os 4 valores seriam a posição dos outros dos dois itens na caixa
-
-		//NÃO - com dois valores e uma matriz mx2 onde m é o numero de vizinhos e 2 as duas colunas são a posição de um item na matriz 
-
-		// por um valor indicando a posiçao do item no vetor de items
-	//como vou escolher um bom vizinho?
-
-		//menor quantidade de caixas. E se for a mesma quantidade?
-
-		//vou escolher um vizinho que tenha feito a caixa B ficar o mais proximo possivel de alcançar a capacidade maxima. E que tenha ficado mais proximo do que o a propria caixa que selecionei.
-	//Como sei que encontrei uma boa solução?
-		//primeira pergunta
 
 	//Encontramos? uma solução! basta colocar num arquivo
 	
-	//Bruno:
-
-	qtdCaixas++;
-	fprintf(f, "%d\n", qtdCaixas);
-	for(i=0;i<qtdCaixas;i++){
-		for(e=0;e<posVazia[i];e++){
-			fprintf(f, "%d\t", caixas[i][e]);
-		}
-		fprintf(f, "\n");
-	}
+	//primeiro deixamos em ordem crescente de caixa;
+	sort(itens, nItens, comparaCaixaCrescente);
 	
-	printf("%d", tempo);
+	//então colocamos no arquivo
 
-	free(maiores);
-	free(menores);
+	//qtdCaixas++;
+	fprintf(f, "%d\n", qtdCaixas);
+	for(i=0, e=0;i<nItens;i++){
 
+		printf("posOrig:%d\tpeso:%d\tcaixa:%d\n", itens[i]->posOrig, itens[i]->peso, itens[i]->caixa );
+
+		if(itens[i]->caixa != e) fprintf(f, "\n");
+		fprintf(f, "%d\t", itens[i]->posOrig);
+		e = itens[i]->caixa;
+	}
+	fprintf(f, "\n");	
+
+	for(i=0;i<qtdCaixas;i++) printf("restante[%d] = %d\n", i, restante[i]);
 	free(restante);
-	free(caixas);
-	free(posVazia);
 
 	return qtdCaixas;
-	//Bruno fim
 }
 
-int main (){
-
-	//Bruno:
-
+int main(void) {
 	int caixaSize;
-	int nCaixas, i;
+	int nItens, i;
 	int somaTudo = 0;
-	int *itens;
+	int minCaixas, maxLoop = 1000;
+	Item **itens;
 	FILE *f, *res;
 	f = fopen("instancias/Falkenauer_t60_00.txt", "rt");
 	res = fopen("resultado/resultado.txt", "wt");
-	if(!f){
-		printf("erro!");
+	if (!f) {
+		printf("erro ao abrir instancia\n");
 		exit(EXIT_FAILURE);
 	}
-	fscanf(f, "%d\n", &nCaixas);
+	fscanf(f, "%d\n", &nItens);
 	fscanf(f, "%d\n", &caixaSize);
-	itens = (int*) malloc(nCaixas*sizeof(int));
-	if(!itens){
-		printf("erro!");
+	itens = (Item**) malloc(nItens * sizeof(Item*));
+	if (!itens) {
+		printf("erro ao alocar vetor itens\n");
 		exit(EXIT_FAILURE);
 	}
-	for(i=0;i<nCaixas;i++)
-		fscanf(f, "%d\n", itens+i);
 
-	printf("%d\n", colocaCaixas(res, itens, nCaixas, caixaSize));	
-	
-	for(i=0;i<nCaixas;i++){
-		somaTudo+=itens[i];
+	//Inicializando
+
+	for(i=0;i<nItens;i++){
+		itens[i] = (Item*) malloc(sizeof(Item));
+		if(!itens[i] ){
+			printf("erro ao alocar item\n");
+			exit(EXIT_FAILURE);
+		}
 	}
-printf("soma:\n%d\n", somaTudo);
-printf("tamanho:\n%d\n", caixaSize);
-	printf("caixas necessarias:\n%d\n", somaTudo/caixaSize);
 
+	// Lendo do arquivo e preenchendo o vetor de ITENS.
+	for (i = 0;i<nItens;i++) {
+		fscanf(f, "%d\n", &(itens[i]->peso));
+		itens[i]->posOrig = i;
+		itens[i]->caixa = -1;
+	}
+	// Somando todos os pesos
+	for (i = 0;i<nItens;i++) {
+		somaTudo += itens[i]->peso;
+	}
+	minCaixas = somaTudo / caixaSize;
+	if(minCaixas*caixaSize<somaTudo) minCaixas++;
+
+	printf("%d\n", colocaCaixas(res, itens, nItens, caixaSize, minCaixas, maxLoop));
+	
+	printf("soma:\n%d\n", somaTudo);
+	printf("tamanho:\n%d\n", caixaSize);
+	printf("caixas necessarias:\n%d\n", minCaixas);
+	
+	for(i=0;i<nItens;i++)
+		free(itens[i]);
 	free(itens);
 	return 0;
 }
-

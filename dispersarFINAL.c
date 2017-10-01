@@ -1,3 +1,4 @@
+#pragma warning(disable : 4996)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,38 +56,33 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa)
 
 	fprintf(f, "%d\n", qtdCaixas);
 	for (i = 0, e = 0;i<nItens;i++) {
-
-		printf("posOrig:%d\tpeso:%d\tcaixa:%d\n", itens[i]->posOrig, itens[i]->peso, itens[i]->caixa);
-
 		if (itens[i]->caixa != e) fprintf(f, "\n");
-		fprintf(f, "%d\t", itens[i]->posOrig);
+		fprintf(f, "%d\t", itens[i]->posOrig+1);
 		e = itens[i]->caixa;
 	}
 	fprintf(f, "\n");
 
-	for (i = 0;i<qtdCaixas;i++) printf("restante[%d] = %d\n", i, restante[i]);
-
 	free(restante);
-	
+
 	return qtdCaixas;
 }
-char* criaPath(char *pathA){
+char* criaPath(char *pathA) {
 	char *pathB;
 	char *inicio;
 	char *fim;
 	int tamPath;
 	inicio = strrchr(pathA, '/');
 	fim = strrchr(pathA, '.');
-	if(inicio == NULL) inicio = pathA;
+	if (inicio == NULL) inicio = pathA;
 	else inicio++;
-	if(fim != NULL) *fim = '\0';
+	if (fim != NULL) *fim = '\0';
 	//+4 ".sol" +1 '\0'
-	tamPath = strlen("resultado/") + strlen(inicio) + 4 +1;
-	pathB = (char*) malloc(tamPath*sizeof(int));
+	tamPath = strlen("resultado/") + strlen(inicio) + 4 + 1;
+	pathB = (char*)malloc(tamPath * sizeof(int));
 	strcpy(pathB, "resultado/");
 	strcat(pathB, inicio);
 	strcat(pathB, ".sol\0");
-	printf("tamPathB:%d \n", (int) strlen(pathB));
+	printf("tamPathB:%d \n", (int)strlen(pathB));
 	printf("PathB:%s \n", pathB);
 	return pathB;
 
@@ -102,14 +98,18 @@ int main(int argc, char **argv) {
 	FILE *f, *res;
 	clock_t tic, toc;
 
-	if (argc != 2 ) {
+	if (argc != 2) {
 		printf("Modo de uso: ./executavel path/nome_da_instancia\n");
 		exit(EXIT_FAILURE);
 	}
 
 	//Abrindo arquivos de entrada e saida
 
-	mkdir("resultados", 0777);
+	#ifdef __linux__
+		mkdir("resultado", 0777);
+	#else
+		_mkdir("resultado");
+	#endif
 	resPath = criaPath(argv[1]);
 
 	f = fopen(argv[1], "rt");
@@ -119,12 +119,13 @@ int main(int argc, char **argv) {
 		printf("Erro ao abrir arquivo de entrada\n");
 		printf("Arquivo de entrada:\n%s\n", argv[1]);
 		printf("Arquivo de saida:\n%s\n", resPath);
-		printf("tentando com .txt\n");
-		fPath = strndup(argv[1], (strlen(argv[1])+4)*sizeof(char));
+		printf("Tentando com .txt ...\n");
+		fPath = (char*)malloc((strlen(argv[1]) + 4) * sizeof(char));
+		strcpy(fPath, argv[1]);
 		strcat(fPath, ".txt");
 		f = fopen(fPath, "rt");
 		free(fPath);
-		if(f) printf("sucesso\n");
+		if (f) printf("Sucesso!\n");
 		else exit(EXIT_FAILURE);
 	}
 	if (!res) {
@@ -143,14 +144,14 @@ int main(int argc, char **argv) {
 	//alocando itens
 	itens = (Item**)malloc(nItens * sizeof(Item*));
 	if (!itens) {
-		printf("erro ao alocar vetor itens\n");
+		printf("Erro ao alocar vetor itens\n");
 		exit(EXIT_FAILURE);
 	}
 
 	for (i = 0;i<nItens;i++) {
 		itens[i] = (Item*)malloc(sizeof(Item));
 		if (!itens[i]) {
-			printf("erro ao alocar item\n");
+			printf("Erro ao alocar item\n");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -171,11 +172,11 @@ int main(int argc, char **argv) {
 
 	/* 		Colocando nas caixas 		*/
 	printf("%d\n", colocaCaixas(res, itens, nItens, caixaSize));
-	
+
 	//encerrando
-	printf("peso total:\n%d\n", somaTudo);
-	printf("tamanho de cada caixa:\n%d\n", caixaSize);
-	printf("estimativa de caixas necessarias:\n%d\n", minCaixas);
+	printf("Peso total:\n%d\n", somaTudo);
+	printf("Tamanho de cada caixa:\n%d\n", caixaSize);
+	printf("Estimativa de caixas necessarias:\n%d\n", minCaixas);
 
 	for (i = 0;i<nItens;i++)
 		free(itens[i]);
@@ -184,4 +185,3 @@ int main(int argc, char **argv) {
 	printf("Tempo de execucao: %f segundos\n", (double)(toc - tic) / CLOCKS_PER_SEC);
 	return 0;
 }
-

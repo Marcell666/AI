@@ -1,0 +1,20 @@
+Introdução
+O problema em questão, neste trabalho acadêmico, é o problema de Bin Packing (problema de empacotamento), onde itens de diferentes pesos têm de ser empacotados em um número finito de caixas com capacidade limitada, de forma que a quantidade de caixas utilizadas seja minimizada.
+Este é um problema considerado NP-Difícil, na teoria de complexidade computacional, pelo fato de não ser conhecido um algoritmo que resolva o problema em tempo polinomial.
+	Deste problema, surgiram muitas variações, como por exemplo o empacotamento linear (LP), empacotamento por custo (CP), empacotamento por peso (WP). As aplicações destes problemas são muitas, desde o preenchimento de recipientes até carregamento de caminhões com capacidade e/ou peso restrito.
+	
+Definição do Problema
+	O Bin Packing Problem consiste em alocar itens de diferentes pesos em caixas com capacidade limitada, de forma a minimizar a quantidade de caixas utilizadas para acomodar todos os itens. A alocação dos itens deve respeitar a sua capacidade e na solução proposta, nenhuma caixa pode conter mais do que ela suporta.
+	Nesta instância do problema, não são considerados conflitos (onde certos itens não podem ser alocados juntos com outros determinados itens, exceto se isso implicar em ultrapassar a capacidade da caixa). A única restrição a ser levada em consideração é a capacidade das caixas (todas possuem a mesma capacidade).
+
+Metodologia
+	Para garantir o funcionamento completo do programa, incluindo a leitura do arquivo de entrada, que contém a quantidade de itens, a capacidade das caixas e em seguida, os pesos dos itens (que são numerados de acordo com sua ordem), é necessário que o arquivo de entrada siga o seguinte formato:
+	70 	<- Quantidade de itens
+	1000 	<- Capacidade das caixas
+	765	<- Pesos dos itens, a seguir.
+	567
+	230
+	...
+
+	O arquivo de entrada deve ...
+	

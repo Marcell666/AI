@@ -26,9 +26,6 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa)
 	
 	//Fim da inicializando
 
-	//fprintf(f,"\n%d\t", res);
-	fprintf(f,"    \n");
-
 	qtdCaixas = 1;
 
 	//dispersar

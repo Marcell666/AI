@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
 
 	//Abrindo arquivos de entrada e saida
 
-	mkdir("resultados", 0777);
+	mkdir("resultado", 0777);
 	resPath = criaPath(argv[1]);
 
 	f = fopen(argv[1], "rt");

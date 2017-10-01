@@ -178,7 +178,7 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa, int minCaixas,
 		e = itens[i]->caixa;
 	}
 	fprintf(f, "\n");
-	fprintf(f, "\n%d\n", semente);
+	//fprintf(f, "\n%d\n", semente);
 
 	//for (i = 0;i<qtdCaixas;i++) printf("restante[%d] = %d\n", i, restante[i]);
 	free(restante);
@@ -195,7 +195,7 @@ char* criaPath(char *pathA) {
 	if (inicio == NULL) inicio = pathA;
 	else inicio++;
 	if (fim != NULL) *fim = '\0';
-	//+4 ".sol" +1 '\0'
+	//+4 é o numero de caracteres em ".sol" e +1 é por causa '\0' no final
 	tamPath = strlen("resultado/") + strlen(inicio) + 4 + 1;
 	pathB = (char*)malloc(tamPath * sizeof(int));
 	strcpy(pathB, "resultado/");

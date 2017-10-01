@@ -1,8 +1,8 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 #include "sort.h"
 
 int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa)
@@ -12,8 +12,6 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa)
 	int *restante;
 	int qtdCaixas = 0;
 	int i, e;
-	int tempo = time(NULL);
-	srand(tempo);
 
 	restante = (int*)malloc(nItens * sizeof(int));
 	if (!restante) {
@@ -66,17 +64,36 @@ int colocaCaixas(FILE *f, Item **itens, int nItens, int tamCaixa)
 	}
 	fprintf(f, "\n");
 
-	printf("%d\n", tempo);
-
 	for (i = 0;i<qtdCaixas;i++) printf("restante[%d] = %d\n", i, restante[i]);
 
 	free(restante);
 	
 	return qtdCaixas;
 }
+char* criaPath(char *pathA){
+	char *pathB;
+	char *inicio;
+	char *fim;
+	int tamPath;
+	inicio = strrchr(pathA, '/');
+	fim = strrchr(pathA, '.');
+	if(inicio == NULL) inicio = pathA;
+	else inicio++;
+	if(fim != NULL) *fim = '\0';
+	//+4 ".sol" +1 '\0'
+	tamPath = strlen("resultado/") + strlen(inicio) + 4 +1;
+	pathB = (char*) malloc(tamPath*sizeof(int));
+	strcpy(pathB, "resultado/");
+	strcat(pathB, inicio);
+	strcat(pathB, ".sol\0");
+	printf("tamPathB:%d \n", (int) strlen(pathB));
+	printf("PathB:%s \n", pathB);
+	return pathB;
 
+}
 int main(int argc, char **argv) {
-
+	char *resPath;
+	char *fPath;
 	int caixaSize;
 	int nItens, i;
 	int somaTudo = 0;
@@ -84,28 +101,51 @@ int main(int argc, char **argv) {
 	Item **itens;
 	FILE *f, *res;
 	clock_t tic, toc;
-	if (argc != 2) {
-		printf("Modo de uso: ./executavel path/nome_do_arquivo\n");
+
+	if (argc != 2 ) {
+		printf("Modo de uso: ./executavel path/nome_da_instancia\n");
 		exit(EXIT_FAILURE);
 	}
-	tic = clock();
+
+	//Abrindo arquivos de entrada e saida
+
+	mkdir("resultados", 0777);
+	resPath = criaPath(argv[1]);
 
 	f = fopen(argv[1], "rt");
-	res = fopen("resultado/resultado.txt", "wt");
+	res = fopen(resPath, "wt");
+
 	if (!f) {
-		printf("Erro ao abrir instancia.\n");
+		printf("Erro ao abrir arquivo de entrada\n");
+		printf("Arquivo de entrada:\n%s\n", argv[1]);
+		printf("Arquivo de saida:\n%s\n", resPath);
+		printf("tentando com .txt\n");
+		fPath = strndup(argv[1], (strlen(argv[1])+4)*sizeof(char));
+		strcat(fPath, ".txt");
+		f = fopen(fPath, "rt");
+		free(fPath);
+		if(f) printf("sucesso\n");
+		else exit(EXIT_FAILURE);
+	}
+	if (!res) {
+		printf("Erro ao abrir arquivo de saida\n");
+		printf("Arquivo de entrada:\n%s\n", argv[1]);
+		printf("Arquivo de saida:\n%s\n", resPath);
 		exit(EXIT_FAILURE);
 	}
+	free(resPath);
+	//iniciando contagem de tempo
+	tic = clock();
+	//lendo a quantidade de itens
 	fscanf(f, "%d\n", &nItens);
+	//lendo tamanho da caixa
 	fscanf(f, "%d\n", &caixaSize);
+	//alocando itens
 	itens = (Item**)malloc(nItens * sizeof(Item*));
-	
 	if (!itens) {
 		printf("erro ao alocar vetor itens\n");
 		exit(EXIT_FAILURE);
 	}
-
-	//Inicializando
 
 	for (i = 0;i<nItens;i++) {
 		itens[i] = (Item*)malloc(sizeof(Item));
@@ -115,28 +155,33 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	// Lendo do arquivo e preenchendo o vetor de ITENS.
+	// Lendo do arquivo e preenchendo o vetor de itens
 	for (i = 0;i<nItens;i++) {
 		fscanf(f, "%d\n", &(itens[i]->peso));
 		itens[i]->posOrig = i;
 		itens[i]->caixa = -1;
 	}
-	// Somando todos os pesos
+	// Procurando uma estimativa de quantas caixas vamos precisar
+	// Isso nos da um criterio para o quão bom foi o resultado
 	for (i = 0;i<nItens;i++) {
 		somaTudo += itens[i]->peso;
 	}
 	minCaixas = somaTudo / caixaSize;
 	if (minCaixas*caixaSize<somaTudo) minCaixas++;
-	printf("%d\n", colocaCaixas(res, itens, nItens, caixaSize));
 
-	printf("soma:\n%d\n", somaTudo);
-	printf("tamanho:\n%d\n", caixaSize);
-	printf("caixas necessarias:\n%d\n", minCaixas);
+	/* 		Colocando nas caixas 		*/
+	printf("%d\n", colocaCaixas(res, itens, nItens, caixaSize));
+	
+	//encerrando
+	printf("peso total:\n%d\n", somaTudo);
+	printf("tamanho de cada caixa:\n%d\n", caixaSize);
+	printf("estimativa de caixas necessarias:\n%d\n", minCaixas);
+
 	for (i = 0;i<nItens;i++)
 		free(itens[i]);
 	free(itens);
-
 	toc = clock();
 	printf("Tempo de execucao: %f segundos\n", (double)(toc - tic) / CLOCKS_PER_SEC);
 	return 0;
 }
+
